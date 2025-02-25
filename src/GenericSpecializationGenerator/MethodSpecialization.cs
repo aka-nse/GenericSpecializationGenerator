@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-
 namespace GenericSpecializationGenerator;
 
 internal class MethodSpecialization(

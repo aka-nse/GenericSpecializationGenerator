@@ -1,7 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using GenericSpecializationGenerator.DebugApp;
 
-var sample = new SampleClass();
+var sample = new SampleInstanceClass();
 sample.Foo("hogehoge");
 sample.Foo(123);
 sample.Bar("hoge");

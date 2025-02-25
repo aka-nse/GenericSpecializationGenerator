@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 
 namespace GenericSpecializationGenerator;
 
@@ -22,40 +17,44 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
         var primaryGenericMethod = context.SyntaxProvider.ForAttributeWithMetadataName(
             $"{GenericSpecializationNamespaceName}.{PrimaryGenericAttributeName}",
             static (node, token) => true,
-            static (context, token) => context);
+            static (context, token) =>
+            {
+                var methodSymbol = (IMethodSymbol)context.TargetSymbol;
+                var methodNode = (MethodDeclarationSyntax)context.TargetNode;
+                return new MethodDeclarationInfo(methodSymbol, methodNode);
+            })
+            .WithComparer(EqualityComparer<MethodDeclarationInfo>.Default);
         context.RegisterSourceOutput(primaryGenericMethod, Emit);
     }
 
     private static void Emit(
         SourceProductionContext context,
-        GeneratorAttributeSyntaxContext source)
+        MethodDeclarationInfo method)
     {
-        var methodSymbol = (IMethodSymbol)source.TargetSymbol;
-        var methodNode = (MethodDeclarationSyntax)source.TargetNode;
-        if(!methodSymbol.IsPartialDefinition ||
-            !methodNode.Modifiers.Any(IsAccessibilityModifier))
+        if(!method.Symbol.IsPartialDefinition ||
+            !method.Node.Modifiers.Any(IsAccessibilityModifier))
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 DiagnosticDescriptors.NotModifiedPartialDefinition,
-                methodNode.Identifier.GetLocation(),
-                methodSymbol.Name));
+                method.Node.Identifier.GetLocation(),
+                method.Symbol.Name));
             return;
         }
 
-        var attr = methodSymbol
+        var attr = method.Symbol
             .GetAttributes()
             .Single(attr => attr.AttributeClass?.ToDisplayString() == $"{GenericSpecializationNamespaceName}.{PrimaryGenericAttributeName}");
         var defaultMethod = attr.ConstructorArguments.FirstOrDefault().Value as string ?? throw new Exception();
-        var ownerClass = methodSymbol.ContainingType;
+        var ownerClass = method.Symbol.ContainingType;
         var specializedMethods = ownerClass
             .GetMembers()
-            .Select(x => MethodSpecialization.MakeClosedSignature(x, methodSymbol))
+            .Select(x => MethodSpecialization.MakeClosedSignature(x, method.Symbol))
             .OfType<MethodSpecialization>()
             .ToArray();
 
         context.AddSource(
-            $"{ownerClass.Name}.{methodSymbol.Name}+Specialized.g.cs",
-            GenerateSpecializedMethod(ownerClass, methodNode, methodSymbol, defaultMethod, specializedMethods));
+            $"{ownerClass.Name}.{method.Symbol.Name}+Specialized.g.cs",
+            GenerateSpecializedMethod(ownerClass, method, defaultMethod, specializedMethods));
     }
 
 
