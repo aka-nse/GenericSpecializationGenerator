@@ -13,7 +13,7 @@ especially in release builds.
 ## Usage
 
 ```CSharp
-using GenericSpecialization;
+using GenericSpecialization.DebugApp;
 
 partial class SampleInstanceClass
 {
@@ -63,14 +63,14 @@ partial class SampleInstanceClass
     {
         if(typeof(T) == typeof(Int32))
         {
-            var __input__ = Unsafe.As<T, int>(ref input);
-            Foo(__input__);
+            var __input = Unsafe.As<T, int>(ref input);
+            Foo(__input);
             return;
         }
         if(typeof(T) == typeof(Double))
         {
-            var __input__ = Unsafe.As<T, double>(ref input);
-            Foo(__input__);
+            var __input = Unsafe.As<T, double>(ref input);
+            Foo(__input);
             return;
         }
         FooDefault(input);
