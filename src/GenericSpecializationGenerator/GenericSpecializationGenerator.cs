@@ -23,15 +23,17 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
                 var methodNode = (MethodDeclarationSyntax)context.TargetNode;
                 return new MethodDeclarationInfo(methodSymbol, methodNode);
             })
-            .WithComparer(EqualityComparer<MethodDeclarationInfo>.Default);
+            .WithComparer(EqualityComparer<MethodDeclarationInfo>.Default)
+            .Combine(context.CompilationProvider);
         context.RegisterSourceOutput(primaryGenericMethod, Emit);
     }
 
     private static void Emit(
         SourceProductionContext context,
-        MethodDeclarationInfo method)
+        (MethodDeclarationInfo method, Compilation compilation) data)
     {
-        if(!method.Symbol.IsPartialDefinition ||
+        var (method, compilation) = data;
+        if (!method.Symbol.IsPartialDefinition ||
             !method.Node.Modifiers.Any(IsAccessibilityModifier))
         {
             context.ReportDiagnostic(Diagnostic.Create(
@@ -46,10 +48,12 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
             .Single(attr => attr.AttributeClass?.ToDisplayString() == $"{GenericSpecializationNamespaceName}.{PrimaryGenericAttributeName}");
         var defaultMethod = attr.ConstructorArguments.FirstOrDefault().Value as string ?? throw new Exception();
         var ownerClass = method.Symbol.ContainingType;
+        var comparer = new MethodSpecializationComparer(compilation);
         var specializedMethods = ownerClass
             .GetMembers()
             .Select(x => MethodSpecialization.MakeClosedSignature(x, method.Symbol))
             .OfType<MethodSpecialization>()
+            .OrderBy(x => x, comparer)
             .ToArray();
 
         context.AddSource(

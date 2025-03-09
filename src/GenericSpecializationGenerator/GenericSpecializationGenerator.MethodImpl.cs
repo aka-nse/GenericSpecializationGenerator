@@ -34,7 +34,7 @@ partial class GenericSpecializationGenerator
             {
                 {{method}}
                 {
-                    {{specializedMethods.OrderBy(x => x, MethodSpecializationComparer.Instance).Select(GetSpecializedCode)}}
+                    {{specializedMethods.Select(GetSpecializedCode)}}
                     {{GetDefaultReturn(method.Symbol, defaultMethodName)}}
                 }
             }
@@ -102,8 +102,8 @@ partial class GenericSpecializationGenerator
 
         protected override SourceCodeGenerationHandler GetReturn(IMethodSymbol methodSymbol, MethodSpecialization specialized)
             => $$"""
-            var {specialized.ArgumentPrefix}retval = {{methodSymbol.Name}}({{string.Join(", ", methodSymbol.Parameters.Select(arg => $"{specialized.VariablePrefix}{arg.Name}"))}});
-            return Unsafe.As<{{specialized.SpecializedMethod.ReturnType}}, {{methodSymbol.ReturnType}}>(ref {specialized.ArgumentPrefix}retval);
+            var {{specialized.VariablePrefix}}retval = {{methodSymbol.Name}}({{string.Join(", ", methodSymbol.Parameters.Select(arg => $"{specialized.VariablePrefix}{arg.Name}"))}});
+            return Unsafe.As<{{specialized.SpecializedMethod.ReturnType}}, {{methodSymbol.ReturnType}}>(ref {{specialized.VariablePrefix}}retval);
             """;
 
         protected override SourceCodeGenerationHandler GetDefaultReturn(IMethodSymbol methodSymbol, string defaultMethodName)

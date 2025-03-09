@@ -91,10 +91,9 @@ internal class MethodSpecialization(
     }
 }
 
-internal class MethodSpecializationComparer : IComparer<MethodSpecialization>
-{
-    public static MethodSpecializationComparer Instance { get; } = new();
 
+internal class MethodSpecializationComparer(Compilation compilation) : IComparer<MethodSpecialization>
+{
     public int Compare(MethodSpecialization x, MethodSpecialization y)
     {
         if(!SymbolEqualityComparer.Default.Equals(x.PrimaryMethod, y.PrimaryMethod))
@@ -130,6 +129,14 @@ internal class MethodSpecializationComparer : IComparer<MethodSpecialization>
                     continue;
                 }
                 return order;
+            }
+            if(compilation.HasImplicitConversion(xx, yy))
+            {
+                return -1;
+            }
+            if (compilation.HasImplicitConversion(yy, xx))
+            {
+                return +1;
             }
         }
         return 0;

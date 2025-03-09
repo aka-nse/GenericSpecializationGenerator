@@ -57,6 +57,24 @@ partial class SampleInstanceClass
         return x;
     }
 
+    private object Baz(object x, int _x)
+    {
+        Console.WriteLine($"(object, int) specialized");
+        return x;
+    }
+
+    private string Baz(string x, double _x)
+    {
+        Console.WriteLine($"(string, double) specialized");
+        return x;
+    }
+
+    private object Baz(object x, double _x)
+    {
+        Console.WriteLine($"(object, double) specialized");
+        return x;
+    }
+
     private int Baz(int x, int _x)
     {
         Console.WriteLine($"(int, int) specialized");
@@ -79,11 +97,5 @@ partial class SampleInstanceClass
     {
         Console.WriteLine($"(double, double) specialized");
         return _x;
-    }
-
-    private string Baz(string x, double _x)
-    {
-        Console.WriteLine($"(string, double) specialized");
-        return x;
     }
 }
