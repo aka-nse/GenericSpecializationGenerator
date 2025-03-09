@@ -63,14 +63,14 @@ partial class SampleInstanceClass
     {
         if(typeof(T) == typeof(Int32))
         {
-            var __input = Unsafe.As<T, int>(ref input);
-            Foo(__input);
+            var _input = Unsafe.As<T, int>(ref input);
+            Foo(_input);
             return;
         }
         if(typeof(T) == typeof(Double))
         {
-            var __input = Unsafe.As<T, double>(ref input);
-            Foo(__input);
+            var _input = Unsafe.As<T, double>(ref input);
+            Foo(_input);
             return;
         }
         FooDefault(input);

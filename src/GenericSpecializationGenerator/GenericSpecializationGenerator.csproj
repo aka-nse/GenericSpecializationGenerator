@@ -23,6 +23,7 @@
         <RepositoryUrl>https://github.com/aka-nse/GenericSpecializationGenerator</RepositoryUrl>
         <PackageProjectUrl>https://github.com/aka-nse/GenericSpecializationGenerator</PackageProjectUrl>
         <PackageTags>Generator,Generics</PackageTags>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>

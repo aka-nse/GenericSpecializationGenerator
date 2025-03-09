@@ -49,39 +49,39 @@ partial class SampleInstanceClass
     }
 
     [PrimaryGeneric(nameof(BazDefault))]
-    public partial T1 Baz<T1, T2>(T1 x, T2 y);
+    public partial T1 Baz<T1, T2>(T1 x, T2 _x);
 
-    private T1 BazDefault<T1, T2>(T1 x, T2 y)
+    private T1 BazDefault<T1, T2>(T1 x, T2 _x)
     {
         Console.WriteLine($"default");
         return x;
     }
 
-    private int Baz(int x, int y)
+    private int Baz(int x, int _x)
     {
         Console.WriteLine($"(int, int) specialized");
         return x;
     }
 
-    private double Baz(double x, int y)
+    private double Baz(double x, int _x)
     {
         Console.WriteLine($"(double, int) specialized");
         return x;
     }
 
-    private int Baz(int x, double y)
+    private int Baz(int x, double _x)
     {
         Console.WriteLine($"(int, double) specialized");
         return x;
     }
 
-    private double Baz(double x, double y)
+    private double Baz(double x, double _x)
     {
         Console.WriteLine($"(double, double) specialized");
-        return y;
+        return _x;
     }
 
-    private string Baz(string x, double y)
+    private string Baz(string x, double _x)
     {
         Console.WriteLine($"(string, double) specialized");
         return x;

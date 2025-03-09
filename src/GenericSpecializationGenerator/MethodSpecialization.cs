@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 namespace GenericSpecializationGenerator;
 
 internal class MethodSpecialization(
@@ -10,6 +11,19 @@ internal class MethodSpecialization(
     public IMethodSymbol PrimaryMethod { get; } = primaryMethod;
     public IMethodSymbol SpecializedMethod { get; } = specializedMethod;
     public IReadOnlyList<INamedTypeSymbol> ClosedTypeArgs { get; } = closedTypeArgs;
+
+    public string VariablePrefix
+    {
+        get
+        {
+            var prefix = "_";
+            while (PrimaryMethod.Parameters.Any(x => x.Name.StartsWith(prefix)))
+            {
+                prefix += "_";
+            }
+            return prefix;
+        }
+    }
 
 
     public static MethodSpecialization? MakeClosedSignature(ISymbol maybeSpecialized, IMethodSymbol primary)
