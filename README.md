@@ -35,11 +35,25 @@ partial class SampleInstanceClass
         Console.WriteLine($"int specialized");
     }
 
-    // Write non-generic method which has same signature with the closed of target generic method declaration.
-    // They will be detected automatically and be treated as implementation of generic specialization.
     private void Foo(double input)
     {
         Console.WriteLine($"double specialized");
+    }
+
+    // When derived types are included, the priority is determined based on the standard overload resolution order.
+    private static void Foo(List<double> input)
+    {
+        Console.WriteLine($"List<double> specialized");
+    }
+
+    private static void Foo(IList<double> input)
+    {
+        Console.WriteLine($"IList<double> specialized");
+    }
+
+    private static void Foo(IEnumerable<double> input)
+    {
+        Console.WriteLine($"IEnumerable<double> specialized");
     }
 }
 ```
@@ -59,17 +73,36 @@ namespace GenericSpecializationGenerator.DebugApp;
 
 partial class SampleInstanceClass
 {
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public partial void Foo<T>(T input)
     {
-        if(typeof(T) == typeof(Int32))
+        if(typeof(T) == typeof(int))
         {
             var _input = Unsafe.As<T, int>(ref input);
             Foo(_input);
             return;
         }
-        if(typeof(T) == typeof(Double))
+        if(typeof(T) == typeof(double))
         {
             var _input = Unsafe.As<T, double>(ref input);
+            Foo(_input);
+            return;
+        }
+        if(typeof(System.Collections.Generic.List<double>).IsAssignableFrom(typeof(T)))
+        {
+            var _input = Unsafe.As<T, System.Collections.Generic.List<double>>(ref input);
+            Foo(_input);
+            return;
+        }
+        if(typeof(System.Collections.Generic.IList<double>).IsAssignableFrom(typeof(T)))
+        {
+            var _input = Unsafe.As<T, System.Collections.Generic.IList<double>>(ref input);
+            Foo(_input);
+            return;
+        }
+        if(typeof(System.Collections.Generic.IEnumerable<double>).IsAssignableFrom(typeof(T)))
+        {
+            var _input = Unsafe.As<T, System.Collections.Generic.IEnumerable<double>>(ref input);
             Foo(_input);
             return;
         }
@@ -81,6 +114,7 @@ partial class SampleInstanceClass
 
 ### Rules
 
+- Both of void-return and non-void-return methods are supported.
 - Both of instance and static methods are supported.
   - If primary generic method is an instance method,
     both of instance and static methods are available as specialization or default.
@@ -97,8 +131,13 @@ These might be changed in future.
 - Partial specialization is not supported now.
   - where only some of the multiple type arguments are determined
   - where type constraints become stricter instead of concrete types being substituted
-- Types that can be derived is not supported now.
 
 ## License
 
 Apache License Version 2.0
+
+## Release Note
+
+### v0.0.1
+
+- Adds a source generator to add `GenericSpecialization.PrimaryGenericAttribute` class and generate generic specialization code.
