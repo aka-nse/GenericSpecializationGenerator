@@ -1,5 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
-
+﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 namespace GenericSpecializationGenerator;
 
 internal class MethodSpecialization(
@@ -11,6 +11,19 @@ internal class MethodSpecialization(
     public IMethodSymbol PrimaryMethod { get; } = primaryMethod;
     public IMethodSymbol SpecializedMethod { get; } = specializedMethod;
     public IReadOnlyList<INamedTypeSymbol> ClosedTypeArgs { get; } = closedTypeArgs;
+
+    public string VariablePrefix
+    {
+        get
+        {
+            var prefix = "_";
+            while (PrimaryMethod.Parameters.Any(x => x.Name.StartsWith(prefix)))
+            {
+                prefix += "_";
+            }
+            return prefix;
+        }
+    }
 
 
     public static MethodSpecialization? MakeClosedSignature(ISymbol maybeSpecialized, IMethodSymbol primary)
@@ -78,10 +91,9 @@ internal class MethodSpecialization(
     }
 }
 
-internal class MethodSpecializationComparer : IComparer<MethodSpecialization>
-{
-    public static MethodSpecializationComparer Instance { get; } = new();
 
+internal class MethodSpecializationComparer(Compilation compilation) : IComparer<MethodSpecialization>
+{
     public int Compare(MethodSpecialization x, MethodSpecialization y)
     {
         if(!SymbolEqualityComparer.Default.Equals(x.PrimaryMethod, y.PrimaryMethod))
@@ -117,6 +129,14 @@ internal class MethodSpecializationComparer : IComparer<MethodSpecialization>
                     continue;
                 }
                 return order;
+            }
+            if(compilation.HasImplicitConversion(xx, yy))
+            {
+                return -1;
+            }
+            if (compilation.HasImplicitConversion(yy, xx))
+            {
+                return +1;
             }
         }
         return 0;
