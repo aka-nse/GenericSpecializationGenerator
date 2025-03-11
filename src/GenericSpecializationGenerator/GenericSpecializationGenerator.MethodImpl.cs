@@ -32,6 +32,7 @@ partial class GenericSpecializationGenerator
 
             partial class {{ownerClass.Name}}
             {
+                [MethodImpl(MethodImplOptions.AggressiveOptimization)]
                 {{method}}
                 {
                     {{specializedMethods.Select(GetSpecializedCode)}}
@@ -50,7 +51,7 @@ partial class GenericSpecializationGenerator
             SourceCodeGenerationHandler generator = $$"""
             if({{condition}})
             {
-                {{paramMaps.ForeachIndented(tpl => $"var {specialized.VariablePrefix}{tpl.arg.Name} = Unsafe.As<{tpl.arg.Type}, {tpl.mapped.Type}>(ref {tpl.arg.Name});")}}
+                {{paramMaps.ForeachIndented(tpl => GetVariableCast(specialized, tpl))}}
                 {{GetReturn(methodSymbol, specialized)}}
             }
             """;
@@ -63,17 +64,18 @@ partial class GenericSpecializationGenerator
 
         private static string GetCondition(IEnumerable<ITypeSymbol> openTypeArgs, IEnumerable<INamedTypeSymbol> closedTypeArgs)
         {
-            var sb = new StringBuilder();
-            foreach (var (open, closed) in openTypeArgs.Zip(closedTypeArgs, (x, y) => (x, y)))
-            {
-                if (sb.Length > 0)
-                {
-                    sb.Append(" && ");
-                }
+            static string core(ITypeSymbol open, INamedTypeSymbol closed)
+                => closed.IsValueType
+                ? $"typeof({open}) == typeof({closed})"
+                : $"typeof({closed}).IsAssignableFrom(typeof({open}))";
 
-                sb.Append($"typeof({open.Name}) == typeof({closed.Name})");
-            }
-            return sb.ToString();
+            return string.Join(" && ", openTypeArgs.Zip(closedTypeArgs, core));
+        }
+
+        private static string GetVariableCast(MethodSpecialization specialized, (IParameterSymbol arg, IParameterSymbol mapped) tpl)
+        {
+            var (arg, mapped) = tpl;
+            return $"var {specialized.VariablePrefix}{mapped.Name} = Unsafe.As<{arg.Type}, {mapped.Type}>(ref {arg.Name});";
         }
     }
 

@@ -27,6 +27,21 @@ partial class SampleInstanceClass
         Console.WriteLine($"double specialized");
     }
 
+    private static void Foo(IList<double> input)
+    {
+        Console.WriteLine($"IList<double> specialized");
+    }
+
+    private static void Foo(IEnumerable<double> input)
+    {
+        Console.WriteLine($"IEnumerable<double> specialized");
+    }
+
+    private static void Foo(List<double> input)
+    {
+        Console.WriteLine($"List<double> specialized");
+    }
+
     [PrimaryGeneric(nameof(BarDefault))]
     public partial T Bar<T>(T input);
 
@@ -45,6 +60,24 @@ partial class SampleInstanceClass
     private double Bar(double input)
     {
         Console.WriteLine($"double specialized");
+        return input;
+    }
+
+    private static IList<double> Bar(IList<double> input)
+    {
+        Console.WriteLine($"IList<double> specialized");
+        return input;
+    }
+
+    private static IEnumerable<double> Bar(IEnumerable<double> input)
+    {
+        Console.WriteLine($"IEnumerable<double> specialized");
+        return input;
+    }
+
+    private static List<double> Bar(List<double> input)
+    {
+        Console.WriteLine($"List<double> specialized");
         return input;
     }
 

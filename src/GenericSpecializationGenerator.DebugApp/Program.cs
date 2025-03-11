@@ -10,3 +10,4 @@ sample.Baz(1, 1);
 sample.Baz(1, 1.0);
 sample.Baz(1.0, 1);
 sample.Baz("", 0.1);
+sample.Baz(new object(), 0.1);
