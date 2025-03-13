@@ -9,7 +9,14 @@ internal class MethodDeclarationInfo(IMethodSymbol symbol, MethodDeclarationSynt
     public MethodDeclarationSyntax Node { get; } = node;
 
     public override string ToString()
-        => $"{string.Join(" ", Node.Modifiers)} {Node.ReturnType} {Symbol.Name}{Node.TypeParameterList}{Node.ParameterList}";
+    {
+        /*
+        foreach(var typeArg in Symbol.TypeArguments.OfType<ITypeParameterSymbol>())
+        {
+        }
+        */
+        return $"{string.Join(" ", Node.Modifiers)} {Node.ReturnType} {Symbol.Name}{Node.TypeParameterList}{Node.ParameterList} {Node.ConstraintClauses}";
+    }
 
     public override int GetHashCode()
         => SymbolEqualityComparer.Default.GetHashCode(Symbol);

@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace GenericSpecializationGenerator;
 
@@ -10,6 +11,7 @@ partial class GenericSpecializationGenerator
         protected GenerationLogic() { }
 
         public string GenerateSpecializedMethod(
+        SyntaxList<UsingDirectiveSyntax> usings,
         INamedTypeSymbol ownerClass,
         MethodDeclarationInfo method,
         string defaultMethodName,
@@ -27,12 +29,14 @@ partial class GenericSpecializationGenerator
             #pragma warning disable CS8602
             #pragma warning disable CS8603
             #pragma warning disable CS8604
-            using System.Runtime.CompilerServices;
+            {{usings.ForeachIndented(syntax => $"{syntax}")}}
             {{ns}}
 
             partial class {{ownerClass.Name}}
             {
-                [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+            #if NETCOREAPP3_0_OR_GREATER
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
+            #endif
                 {{method}}
                 {
                     {{specializedMethods.Select(GetSpecializedCode)}}
@@ -75,7 +79,7 @@ partial class GenericSpecializationGenerator
         private static string GetVariableCast(MethodSpecialization specialized, (IParameterSymbol arg, IParameterSymbol mapped) tpl)
         {
             var (arg, mapped) = tpl;
-            return $"var {specialized.VariablePrefix}{mapped.Name} = Unsafe.As<{arg.Type}, {mapped.Type}>(ref {arg.Name});";
+            return $"var {specialized.VariablePrefix}{mapped.Name} = System.Runtime.CompilerServices.Unsafe.As<{arg.Type}, {mapped.Type}>(ref {arg.Name});";
         }
     }
 
@@ -105,7 +109,7 @@ partial class GenericSpecializationGenerator
         protected override SourceCodeGenerationHandler GetReturn(IMethodSymbol methodSymbol, MethodSpecialization specialized)
             => $$"""
             var {{specialized.VariablePrefix}}retval = {{methodSymbol.Name}}({{string.Join(", ", methodSymbol.Parameters.Select(arg => $"{specialized.VariablePrefix}{arg.Name}"))}});
-            return Unsafe.As<{{specialized.SpecializedMethod.ReturnType}}, {{methodSymbol.ReturnType}}>(ref {{specialized.VariablePrefix}}retval);
+            return System.Runtime.CompilerServices.Unsafe.As<{{specialized.SpecializedMethod.ReturnType}}, {{methodSymbol.ReturnType}}>(ref {{specialized.VariablePrefix}}retval);
             """;
 
         protected override SourceCodeGenerationHandler GetDefaultReturn(IMethodSymbol methodSymbol, string defaultMethodName)
@@ -116,6 +120,7 @@ partial class GenericSpecializationGenerator
 
 
     private static string GenerateSpecializedMethod(
+        SyntaxList<UsingDirectiveSyntax> usings,
         INamedTypeSymbol ownerClass,
         MethodDeclarationInfo method,
         string defaultMethodName,
@@ -124,7 +129,7 @@ partial class GenericSpecializationGenerator
         var logic = method.Symbol.ReturnType.SpecialType == SpecialType.System_Void
             ? GenerationVoidReturnLogic.Instance
             : GenerationNonVoidReturnLogic.Instance;
-        return logic.GenerateSpecializedMethod(ownerClass, method, defaultMethodName, specializedMethods);
+        return logic.GenerateSpecializedMethod(usings, ownerClass, method, defaultMethodName, specializedMethods);
     }
 
 

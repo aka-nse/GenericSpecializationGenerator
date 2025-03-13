@@ -47,6 +47,7 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
             .GetAttributes()
             .Single(attr => attr.AttributeClass?.ToDisplayString() == $"{GenericSpecializationNamespaceName}.{PrimaryGenericAttributeName}");
         var defaultMethod = attr.ConstructorArguments.FirstOrDefault().Value as string ?? throw new Exception();
+        var usings = method.Node.Ancestors().OfType<CompilationUnitSyntax>().Single().Usings;
         var ownerClass = method.Symbol.ContainingType;
         var comparer = new MethodSpecializationComparer(compilation);
         var specializedMethods = ownerClass
@@ -58,7 +59,7 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
 
         context.AddSource(
             $"{ownerClass.Name}.{method.Symbol.Name}+Specialized.g.cs",
-            GenerateSpecializedMethod(ownerClass, method, defaultMethod, specializedMethods));
+            GenerateSpecializedMethod(usings, ownerClass, method, defaultMethod, specializedMethods));
     }
 
 

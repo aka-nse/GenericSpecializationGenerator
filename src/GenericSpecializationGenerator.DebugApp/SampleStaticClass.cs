@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using GenericSpecialization;
@@ -10,7 +11,7 @@ namespace GenericSpecializationGenerator.DebugApp;
 static partial class SampleStaticClass
 {
     [PrimaryGeneric(nameof(FooDefault))]
-    public static partial void Foo<T>(T input);
+    public static partial void Foo<T>(T input) where T : unmanaged, INumber<T>;
     
     private static void FooDefault<T>(T input)
     {
@@ -49,7 +50,9 @@ static partial class SampleStaticClass
     }
 
     [PrimaryGeneric(nameof(BazDefault))]
-    public static partial T1 Baz<T1, T2>(T1 x, T2 y);
+    public static partial T1 Baz<T1, T2>(T1 x, T2 y)
+        where T1 : unmanaged, INumber<T1>
+        where T2 : unmanaged, INumberBase<T2>, IComparable<T2>;
 
     private static T1 BazDefault<T1, T2>(T1 x, T2 y)
     {

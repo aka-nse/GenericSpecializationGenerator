@@ -1,5 +1,9 @@
 # GenericSpecializationGenerator
 
+[<img src="https://img.shields.io/badge/-GitHub-blue.svg?logo=github" />](https://github.com/aka-nse/GenericSpecializationGenerator)
+
+[<img src="https://img.shields.io/badge/-NuGet-019733.svg?logo=nuget" />](https://www.nuget.org/packages/akanse.GenericSpecializationGenerator)
+
 Provides generic type specialization.
 
 ## What's this?
@@ -138,6 +142,12 @@ Apache License Version 2.0
 
 ## Release Note
 
-### v0.0.1
+### v0.1.0
 
 - Adds a source generator to add `GenericSpecialization.PrimaryGenericAttribute` class and generate generic specialization code.
+
+### v0.1.1
+
+- Fixes some bugs
+  - Adds framework version check for MethodImplOptions.AggressiveOptimization
+  - Supports type constraints
