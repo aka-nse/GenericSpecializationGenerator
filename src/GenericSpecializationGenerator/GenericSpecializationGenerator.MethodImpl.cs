@@ -32,7 +32,9 @@ partial class GenericSpecializationGenerator
 
             partial class {{ownerClass.Name}}
             {
+            #if NETCOREAPP3_0_OR_GREATER
                 [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+            #endif
                 {{method}}
                 {
                     {{specializedMethods.Select(GetSpecializedCode)}}
