@@ -151,3 +151,7 @@ Apache License Version 2.0
 - Fixes some bugs
   - Adds framework version check for MethodImplOptions.AggressiveOptimization
   - Supports type constraints
+
+### v0.1.2
+
+- Fixes to supports overloading
