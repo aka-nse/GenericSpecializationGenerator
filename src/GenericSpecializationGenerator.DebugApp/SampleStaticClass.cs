@@ -28,6 +28,25 @@ static partial class SampleStaticClass
         Console.WriteLine($"double specialized");
     }
 
+    [PrimaryGeneric(nameof(FooDefault))]
+    public static partial void Foo<T>(T input, int basis) where T : unmanaged, INumber<T>;
+
+    private static void FooDefault<T>(T input, int basis)
+    {
+        Console.WriteLine($"default");
+    }
+
+    private static void Foo(int input, int basis)
+    {
+        Console.WriteLine($"int specialized");
+    }
+
+    private static void Foo(double input, int basis)
+    {
+        Console.WriteLine($"double specialized");
+    }
+
+
     [PrimaryGeneric(nameof(BarDefault))]
     public static partial T Bar<T>(T input);
 
