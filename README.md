@@ -155,3 +155,7 @@ Apache License Version 2.0
 ### v0.1.2
 
 - Fixes to supports overloading
+
+### v0.1.3
+
+- Supports parameter modifiers (`ref`/`in`/`out`)

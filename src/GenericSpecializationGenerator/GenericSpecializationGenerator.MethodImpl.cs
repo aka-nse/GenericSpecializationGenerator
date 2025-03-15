@@ -30,6 +30,7 @@ partial class GenericSpecializationGenerator
             #pragma warning disable CS8603
             #pragma warning disable CS8604
             {{usings.ForeachIndented(syntax => $"{syntax}")}}
+            using __Unsafe = System.Runtime.CompilerServices.Unsafe;
             {{ns}}
 
             partial class {{ownerClass.Name}}
@@ -79,7 +80,44 @@ partial class GenericSpecializationGenerator
         private static string GetVariableCast(MethodSpecialization specialized, (IParameterSymbol arg, IParameterSymbol mapped) tpl)
         {
             var (arg, mapped) = tpl;
-            return $"var {specialized.VariablePrefix}{mapped.Name} = System.Runtime.CompilerServices.Unsafe.As<{arg.Type}, {mapped.Type}>(ref {arg.Name});";
+            return arg.RefKind switch
+            {
+                RefKind.None => $"var {specialized.VariablePrefix}{mapped.Name} = __Unsafe.As<{arg.Type}, {mapped.Type}>(ref {arg.Name});",
+                RefKind.In => $"ref var {specialized.VariablePrefix}{mapped.Name} = ref __Unsafe.As<{arg.Type}, {mapped.Type}>(ref __Unsafe.AsRef(in {arg.Name}));",
+                RefKind.Ref => $"ref var {specialized.VariablePrefix}{mapped.Name} = ref __Unsafe.As<{arg.Type}, {mapped.Type}>(ref {arg.Name});",
+                RefKind.Out => $"__Unsafe.SkipInit(out {arg.Name}); ref var {specialized.VariablePrefix}{mapped.Name} = ref __Unsafe.As<{arg.Type}, {mapped.Type}>(ref {arg.Name});",
+                _ => throw new ArgumentException(),
+            };
+        }
+
+        protected static string GetSpecializedCallParameters(IMethodSymbol methodSymbol, MethodSpecialization specialized)
+        {
+            string core(IParameterSymbol arg)
+                => arg.RefKind switch
+                {
+                    RefKind.None => $"{specialized.VariablePrefix}{arg.Name}",
+                    RefKind.In => $"in {specialized.VariablePrefix}{arg.Name}",
+                    RefKind.Ref => $"ref {specialized.VariablePrefix}{arg.Name}",
+                    RefKind.Out => $"out {specialized.VariablePrefix}{arg.Name}",
+                    _ => throw new ArgumentException(),
+                };
+
+            return string.Join(", ", methodSymbol.Parameters.Select(core));
+        }
+
+        protected static string GetDefaultCallParameters(IMethodSymbol methodSymbol)
+        {
+            static string core(IParameterSymbol arg)
+                => arg.RefKind switch
+                {
+                    RefKind.None => $"{arg.Name}",
+                    RefKind.In => $"in {arg.Name}",
+                    RefKind.Ref => $"ref {arg.Name}",
+                    RefKind.Out => $"out {arg.Name}",
+                    _ => throw new ArgumentException(),
+                };
+
+            return string.Join(", ", methodSymbol.Parameters.Select(core));
         }
     }
 
@@ -90,13 +128,13 @@ partial class GenericSpecializationGenerator
 
         protected override SourceCodeGenerationHandler GetReturn(IMethodSymbol methodSymbol, MethodSpecialization specialized)
             => $$"""
-            {{methodSymbol.Name}}({{string.Join(", ", methodSymbol.Parameters.Select(arg => $"{specialized.VariablePrefix}{arg.Name}"))}});
+            {{methodSymbol.Name}}({{GetSpecializedCallParameters(methodSymbol, specialized)}});
             return;
             """;
 
         protected override SourceCodeGenerationHandler GetDefaultReturn(IMethodSymbol methodSymbol, string defaultMethodName)
             => $$"""
-            {{defaultMethodName}}({{string.Join(", ", methodSymbol.Parameters.Select(arg => $"{arg.Name}"))}});
+            {{defaultMethodName}}({{GetDefaultCallParameters(methodSymbol)}});
             return;
             """;
     }
@@ -108,13 +146,13 @@ partial class GenericSpecializationGenerator
 
         protected override SourceCodeGenerationHandler GetReturn(IMethodSymbol methodSymbol, MethodSpecialization specialized)
             => $$"""
-            var {{specialized.VariablePrefix}}retval = {{methodSymbol.Name}}({{string.Join(", ", methodSymbol.Parameters.Select(arg => $"{specialized.VariablePrefix}{arg.Name}"))}});
+            var {{specialized.VariablePrefix}}retval = {{methodSymbol.Name}}({{GetSpecializedCallParameters(methodSymbol, specialized)}});
             return System.Runtime.CompilerServices.Unsafe.As<{{specialized.SpecializedMethod.ReturnType}}, {{methodSymbol.ReturnType}}>(ref {{specialized.VariablePrefix}}retval);
             """;
 
         protected override SourceCodeGenerationHandler GetDefaultReturn(IMethodSymbol methodSymbol, string defaultMethodName)
             => $$"""
-            return {{defaultMethodName}}({{string.Join(", ", methodSymbol.Parameters.Select(arg => $"{arg.Name}"))}});
+            return {{defaultMethodName}}({{GetDefaultCallParameters(methodSymbol)}});
             """;
     }
 

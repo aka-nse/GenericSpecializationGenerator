@@ -1,4 +1,9 @@
-﻿using System;
+﻿// #define TEST_STATIC_FOO_1
+#define TEST_STATIC_FOO_2
+// #define TEST_STATIC_BAR
+// #define TEST_STATIC_BAZ
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -10,6 +15,8 @@ namespace GenericSpecializationGenerator.DebugApp;
 
 static partial class SampleStaticClass
 {
+#if TEST_STATIC_FOO_1
+
     [PrimaryGeneric(nameof(FooDefault))]
     public static partial void Foo<T>(T input) where T : unmanaged, INumber<T>;
     
@@ -28,24 +35,34 @@ static partial class SampleStaticClass
         Console.WriteLine($"double specialized");
     }
 
-    [PrimaryGeneric(nameof(FooDefault))]
-    public static partial void Foo<T>(T input, int basis) where T : unmanaged, INumber<T>;
+#endif
 
-    private static void FooDefault<T>(T input, int basis)
+#if TEST_STATIC_FOO_2
+
+    [PrimaryGeneric(nameof(FooDefault))]
+    public static partial void Foo<T>(T input, ref int refArg, in int inArg, out int outArg) where T : unmanaged, INumber<T>;
+
+    private static void FooDefault<T>(T input, ref int refArg, in int inArg, out int outArg)
     {
         Console.WriteLine($"default");
+        outArg = refArg + inArg;
     }
 
-    private static void Foo(int input, int basis)
+    private static void Foo(int input, ref int refArg, in int inArg, out int outArg)
     {
         Console.WriteLine($"int specialized");
+        outArg = refArg + inArg;
     }
 
-    private static void Foo(double input, int basis)
+    private static void Foo(double input, ref int refArg, in int inArg, out int outArg)
     {
         Console.WriteLine($"double specialized");
+        outArg = refArg + inArg;
     }
 
+#endif
+
+#if TEST_STATIC_BAR
 
     [PrimaryGeneric(nameof(BarDefault))]
     public static partial T Bar<T>(T input);
@@ -67,6 +84,10 @@ static partial class SampleStaticClass
         Console.WriteLine($"double specialized");
         return input;
     }
+
+#endif
+
+#if TEST_STATIC_BAZ
 
     [PrimaryGeneric(nameof(BazDefault))]
     public static partial T1 Baz<T1, T2>(T1 x, T2 y)
@@ -108,4 +129,6 @@ static partial class SampleStaticClass
         Console.WriteLine($"(string, double) specialized");
         return x;
     }
+
+#endif
 }
