@@ -1,4 +1,8 @@
-﻿using System;
+﻿// #define TEST_INSTANCE_FOO
+// #define TEST_INSTANCE_BAR
+// #define TEST_INSTANCE_BAZ
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +13,8 @@ namespace GenericSpecializationGenerator.DebugApp;
 
 partial class SampleInstanceClass
 {
+#if TEST_INSTANCE_FOO
+
     [PrimaryGeneric(nameof(FooDefault))]
     public partial void Foo<T>(T input);
     
@@ -41,6 +47,10 @@ partial class SampleInstanceClass
     {
         Console.WriteLine($"List<double> specialized");
     }
+
+#endif
+
+#if TEST_INSTANCE_BAR
 
     [PrimaryGeneric(nameof(BarDefault))]
     public partial T Bar<T>(T input);
@@ -80,6 +90,10 @@ partial class SampleInstanceClass
         Console.WriteLine($"List<double> specialized");
         return input;
     }
+
+#endif
+
+#if TEST_INSTANCE_BAZ
 
     [PrimaryGeneric(nameof(BazDefault))]
     public partial T1 Baz<T1, T2>(T1 x, T2 _x);
@@ -131,4 +145,6 @@ partial class SampleInstanceClass
         Console.WriteLine($"(double, double) specialized");
         return _x;
     }
+
+#endif
 }
