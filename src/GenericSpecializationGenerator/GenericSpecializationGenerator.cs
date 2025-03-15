@@ -57,8 +57,10 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
             .OrderBy(x => x, comparer)
             .ToArray();
 
+
+        var hintName = $"{ownerClass.Name}.{method.Symbol.Name}-{string.Join("-", method.Symbol.Parameters.Select(t => $"{t.Type}"))}+Specialized.g.cs";
         context.AddSource(
-            $"{ownerClass.Name}.{method.Symbol.Name}+Specialized.g.cs",
+            hintName,
             GenerateSpecializedMethod(usings, ownerClass, method, defaultMethod, specializedMethods));
     }
 
