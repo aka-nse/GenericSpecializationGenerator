@@ -58,14 +58,18 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
             .ToArray();
 
         static string getParamName(IParameterSymbol p)
-            => p.RefKind switch
+        {
+            var name = $"{p.Type}";
+            name = name.Replace("<", "_").Replace(">", "_").Replace(",", "_");
+            return p.RefKind switch
             {
-                RefKind.None => $"{p.Type}",
+                RefKind.None => $"{name}",
                 RefKind.Ref or
                 RefKind.Out or
-                RefKind.In => $"ref_{p.Type}",
+                RefKind.In => $"ref_{name}",
                 _ => throw new InvalidOperationException(),
             };
+        }
 
         var hintName = $"{ownerClass.Name}.{method.Symbol.Name}-{string.Join("-", method.Symbol.Parameters.Select(getParamName))}+Specialized.g.cs";
         context.AddSource(
