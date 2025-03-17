@@ -50,7 +50,7 @@ internal class MethodSpecialization(
         var typeArgCloses = new INamedTypeSymbol?[primary.TypeArguments.Length];
         for (var i = 0; i < primaryParams.Length; ++i)
         {
-            if (!IsGenericTypeMatch(primaryParams, typeArgCloses, specializedParams[i], primaryParams[i]))
+            if (!IsGenericTypeMatch(primary.TypeArguments.AsSpan(), typeArgCloses, specializedParams[i], primaryParams[i]))
             {
                 return null;
             }
@@ -62,6 +62,7 @@ internal class MethodSpecialization(
         return new(primary, maybeSpecialized, typeArgCloses!);
     }
 
+    // determines whether specializedType is a valid specialization of primaryType or not
     private static bool IsGenericTypeMatch(
         ReadOnlySpan<ITypeSymbol> openTypeArgs,
         Span<INamedTypeSymbol?> closedTypeArgs,
@@ -70,24 +71,73 @@ internal class MethodSpecialization(
     {
         if (SymbolEqualityComparer.Default.Equals(specializedType, primaryType))
         {
+            // primaryType is concrete and matches with specializedType
             return true;
         }
 
-        var typeArgIndex = openTypeArgs.IndexOf(primaryType, SymbolEqualityComparer.Default);
-        if (typeArgIndex < 0)
+        if(primaryType is ITypeParameterSymbol primaryTypeParam)
         {
+            // primaryType is a bare type parameter
+            var typeParamIndex = openTypeArgs.IndexOf(primaryTypeParam, SymbolEqualityComparer.Default);
+            if (typeParamIndex < 0)
+            {
+                // invalid type parameter
+                return false;
+            }
+            if (closedTypeArgs[typeParamIndex] is null && specializedType is INamedTypeSymbol closedSpecializedType)
+            {
+                // 1st time to map the type parameter
+                closedTypeArgs[typeParamIndex] = closedSpecializedType;
+                return true;
+            }
+            if (SymbolEqualityComparer.Default.Equals(closedTypeArgs[typeParamIndex], specializedType))
+            {
+                // 2nd or more time to map the type parameter
+                return true;
+            }
+
+            // type parameter is already mapped to another type
             return false;
         }
-        if (closedTypeArgs[typeArgIndex] is null && specializedType is INamedTypeSymbol closedSpecializedType)
+
+        if(primaryType is INamedTypeSymbol primaryNamedType &&
+            specializedType is INamedTypeSymbol specializedNamedType &&
+            primaryNamedType.IsGenericType &&
+            specializedNamedType.IsGenericType &&
+            SymbolEqualityComparer.Default.Equals(primaryNamedType.ConstructedFrom, specializedNamedType.ConstructedFrom))
         {
-            closedTypeArgs[typeArgIndex] = closedSpecializedType;
+            // primaryType is a generic type and matches with specializedType
+            for (var i = 0; i < primaryNamedType.TypeArguments.Length; ++i)
+            {
+                if (!IsGenericTypeMatch(openTypeArgs, closedTypeArgs, specializedNamedType.TypeArguments[i], primaryNamedType.TypeArguments[i]))
+                {
+                    return false;
+                }
+            }
             return true;
         }
-        if (SymbolEqualityComparer.Default.Equals(closedTypeArgs[typeArgIndex], specializedType))
-        {
-            return true;
-        }
+
+        // type mismatch
         return false;
+    }
+
+    private static IEnumerable<ITypeParameterSymbol> ScanContainingTypeParams(ITypeSymbol primaryType)
+    {
+        if(primaryType is ITypeParameterSymbol typeParam)
+        {
+            yield return typeParam;
+            yield break;
+        }
+        if(primaryType is INamedTypeSymbol namedType && namedType.IsGenericType)
+        {
+            foreach (var arg in namedType.TypeArguments)
+            {
+                foreach (var innerTypeParam in ScanContainingTypeParams(arg))
+                {
+                    yield return innerTypeParam;
+                }
+            }
+        }
     }
 }
 
