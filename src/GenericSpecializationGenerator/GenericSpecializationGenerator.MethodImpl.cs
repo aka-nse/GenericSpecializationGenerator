@@ -147,7 +147,7 @@ partial class GenericSpecializationGenerator
         protected override SourceCodeGenerationHandler GetReturn(IMethodSymbol methodSymbol, MethodSpecialization specialized)
             => $$"""
             var {{specialized.VariablePrefix}}retval = {{methodSymbol.Name}}({{GetSpecializedCallParameters(methodSymbol, specialized)}});
-            return System.Runtime.CompilerServices.Unsafe.As<{{specialized.SpecializedMethod.ReturnType}}, {{methodSymbol.ReturnType}}>(ref {{specialized.VariablePrefix}}retval);
+            return __Unsafe.As<{{specialized.SpecializedMethod.ReturnType}}, {{methodSymbol.ReturnType}}>(ref {{specialized.VariablePrefix}}retval);
             """;
 
         protected override SourceCodeGenerationHandler GetDefaultReturn(IMethodSymbol methodSymbol, string defaultMethodName)
