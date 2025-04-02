@@ -71,7 +71,7 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
             };
         }
 
-        var hintName = $"{ownerClass.Name}.{method.Symbol.Name}-{string.Join("-", method.Symbol.Parameters.Select(getParamName))}+Specialized.g.cs";
+        var hintName = $"{ownerClass.ToDisplayString()}.{method.Symbol.Name}-{string.Join("-", method.Symbol.Parameters.Select(getParamName))}+Specialized.g.cs";
         context.AddSource(
             hintName,
             GenerateSpecializedMethod(usings, ownerClass, method, defaultMethod, specializedMethods));
