@@ -159,3 +159,8 @@ Apache License Version 2.0
 ### v0.1.3
 
 - Supports parameter modifiers (`ref`/`in`/`out`)
+
+### v0.1.4
+
+- Supports struct/interface
+- Supports inner type
