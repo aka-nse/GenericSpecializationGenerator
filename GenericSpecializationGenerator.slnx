@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/etc/" Id="eb1ea603-4769-449a-a691-0466515c3e94">
+    <File Path="./LICENSE.txt" />
+    <File Path="./README.md" />
+    <File Path=".editorconfig" />
+  </Folder>
+  <Folder Name="/ref/" Id="19912ec7-6bfe-4f62-97d6-4fd70a7751c0">
+    <Project Path="./submodules/SourceGeneratorToolkit/src/SourceGeneratorToolkit/SourceGeneratorToolkit.csproj" />
+  </Folder>
+  <Folder Name="/src/" Id="ddb4ef12-cc4e-5e88-e6fc-71a802f4de97">
+    <Project Path="./src/GenericSpecializationGenerator/GenericSpecializationGenerator.csproj" />
+  </Folder>
+  <Folder Name="/test/" Id="8edbc306-0603-4876-a28f-f41db4bcc1b2">
+    <Project Path="./src/GenericSpecializationGenerator.DebugApp/GenericSpecializationGenerator.DebugApp.csproj" />
+  </Folder>
+</Solution>
