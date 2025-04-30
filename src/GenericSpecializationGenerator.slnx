@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="GenericSpecializationGenerator.DebugApp/GenericSpecializationGenerator.DebugApp.csproj" />
+  <Project Path="GenericSpecializationGenerator/GenericSpecializationGenerator.csproj" />
+</Solution>
