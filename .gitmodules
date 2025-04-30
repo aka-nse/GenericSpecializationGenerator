@@ -1,0 +1,3 @@
+[submodule "SourceGeneratorToolkit"]
+	path = SourceGeneratorToolkit
+	url = https://github.com/aka-nse/SourceGeneratorToolkit.git
