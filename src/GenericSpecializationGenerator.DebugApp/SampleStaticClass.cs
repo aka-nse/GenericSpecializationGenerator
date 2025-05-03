@@ -1,5 +1,5 @@
-﻿// #define TEST_STATIC_FOO_1
-#define TEST_STATIC_FOO_2
+#define TEST_STATIC_FOO_1
+// #define TEST_STATIC_FOO_2
 // #define TEST_STATIC_BAR
 // #define TEST_STATIC_BAZ
 

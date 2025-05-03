@@ -1,8 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace GenericSpecializationGenerator;
+using PipelineParameter = (MethodDeclarationInfo method, GeneratorAttributeSyntaxContext context);
 
 [Generator(LanguageNames.CSharp)]
 public partial class GenericSpecializationGenerator : IIncrementalGenerator
@@ -14,25 +15,27 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
             context.AddSource("GenericSpecializationGenerator.Attributes.cs", AttributesSourceCode);
         });
 
-        var primaryGenericMethod = context.SyntaxProvider.ForAttributeWithMetadataName(
-            $"{GenericSpecializationNamespaceName}.{PrimaryGenericAttributeName}",
-            static (node, token) => true,
-            static (context, token) =>
-            {
-                var methodSymbol = (IMethodSymbol)context.TargetSymbol;
-                var methodNode = (MethodDeclarationSyntax)context.TargetNode;
-                return new MethodDeclarationInfo(methodSymbol, methodNode);
-            })
-            .WithComparer(EqualityComparer<MethodDeclarationInfo>.Default)
-            .Combine(context.CompilationProvider);
+        var primaryGenericMethod = context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                AttributeFullName,
+                static (node, token) => true,
+                static (context, token) =>
+                {
+                    var targetSymbol = (IMethodSymbol)context.TargetSymbol;
+                    var targetNode = (MethodDeclarationSyntax)context.TargetNode;
+                    MethodDeclarationInfo method = new(targetSymbol, targetNode);
+                    return (method, context);
+                })
+            .WithComparer(PipelineComparer.Instance);
         context.RegisterSourceOutput(primaryGenericMethod, Emit);
     }
 
     private static void Emit(
         SourceProductionContext context,
-        (MethodDeclarationInfo method, Compilation compilation) data)
+        PipelineParameter data)
     {
-        var (method, compilation) = data;
+        var (method, source) = data;
+        var compilation = source.SemanticModel.Compilation;
         if (!method.Symbol.IsPartialDefinition ||
             !method.Node.Modifiers.Any(IsAccessibilityModifier))
         {
@@ -45,7 +48,7 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
 
         var attr = method.Symbol
             .GetAttributes()
-            .Single(attr => attr.AttributeClass?.ToDisplayString() == $"{GenericSpecializationNamespaceName}.{PrimaryGenericAttributeName}");
+            .Single(attr => attr.AttributeClass?.ToDisplayString() == AttributeFullName);
         var defaultMethod = attr.ConstructorArguments.FirstOrDefault().Value as string ?? throw new Exception();
         var usings = method.Node.Ancestors().OfType<CompilationUnitSyntax>().Single().Usings;
         var ownerClass = method.Symbol.ContainingType;
@@ -67,10 +70,11 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
                 _ => throw new InvalidOperationException(),
             };
 
-        var hintName = $"{ownerClass.Name}.{method.Symbol.Name}-{string.Join("-", method.Symbol.Parameters.Select(getParamName))}+Specialized.g.cs";
+        var builder = GenerateSpecializedMethod(source, method, defaultMethod, specializedMethods);
+        var hintName = builder.GetPreferHintName(suffix: $".{method.Symbol.Name}-{string.Join("-", method.Symbol.Parameters.Select(getParamName))}+Specialized");
         context.AddSource(
             hintName,
-            GenerateSpecializedMethod(usings, ownerClass, method, defaultMethod, specializedMethods));
+            builder.Build());
     }
 
 
@@ -83,4 +87,18 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
             SyntaxKind.PrivateKeyword => true,
             _ => false,
         };
+}
+
+
+file class PipelineComparer : IEqualityComparer<PipelineParameter>
+{
+    public static PipelineComparer Instance { get; } = new();
+
+    private PipelineComparer() { }
+
+    public bool Equals(PipelineParameter x, PipelineParameter y)
+        => MethodDeclarationInfo.Equals(x.method, y.method);
+
+    public int GetHashCode(PipelineParameter obj)
+        => obj.method.GetHashCode();
 }
