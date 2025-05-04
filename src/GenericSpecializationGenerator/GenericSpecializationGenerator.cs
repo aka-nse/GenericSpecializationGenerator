@@ -55,9 +55,10 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
 
         var builder = GenerateSpecializedMethod(source, method, defaultMethod, specializedMethods);
         var hintName = builder.GetPreferHintName(suffix: $"+Specialized");
+        var sourceCode = builder.Build();
         context.AddSource(
             hintName,
-            builder.Build());
+            sourceCode);
     }
 
 
