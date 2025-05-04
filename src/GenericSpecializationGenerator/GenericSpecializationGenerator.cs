@@ -12,7 +12,9 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
     {
         context.RegisterPostInitializationOutput(static context =>
         {
-            context.AddSource("GenericSpecializationGenerator.Attributes.cs", AttributesSourceCode);
+            context.AddSource(
+                "GenericSpecializationGenerator.Attributes.cs",
+                AttributesSourceCode);
         });
 
         var primaryGenericMethod = context.SyntaxProvider
@@ -20,7 +22,8 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
                 AttributeFullName,
                 static (node, token) => true,
                 static (context, token) => (new MethodDeclarationInfo(context), context))
-            .WithComparer(PipelineComparer.Instance);
+            .WithComparer(PipelineComparer.Instance)
+            ;
         context.RegisterSourceOutput(primaryGenericMethod, Emit);
     }
 
@@ -58,6 +61,7 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
             sourceCode);
     }
 
+
     private static string GetDefaultMethodName(MethodDeclarationInfo method)
     {
         static bool isTargetAttribute(AttributeData attr)
@@ -67,8 +71,9 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
             .GetAttributes()
             .Single(isTargetAttribute);
         return attr.ConstructorArguments.FirstOrDefault().Value as string
-            ?? throw new Exception();
+            ?? throw new InvalidOperationException();
     }
+
 
     private static bool IsAccessibilityModifier(SyntaxToken syntaxToken)
         => syntaxToken.Kind() switch
