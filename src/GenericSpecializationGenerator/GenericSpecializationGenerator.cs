@@ -19,13 +19,7 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
             .ForAttributeWithMetadataName(
                 AttributeFullName,
                 static (node, token) => true,
-                static (context, token) =>
-                {
-                    var targetSymbol = (IMethodSymbol)context.TargetSymbol;
-                    var targetNode = (MethodDeclarationSyntax)context.TargetNode;
-                    MethodDeclarationInfo method = new(targetSymbol, targetNode);
-                    return (method, context);
-                })
+                static (context, token) => (new MethodDeclarationInfo(context), context))
             .WithComparer(PipelineComparer.Instance);
         context.RegisterSourceOutput(primaryGenericMethod, Emit);
     }
@@ -46,37 +40,35 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
             return;
         }
 
-        var attr = method.Symbol
-            .GetAttributes()
-            .Single(attr => attr.AttributeClass?.ToDisplayString() == AttributeFullName);
-        var defaultMethod = attr.ConstructorArguments.FirstOrDefault().Value as string ?? throw new Exception();
-        var usings = method.Node.Ancestors().OfType<CompilationUnitSyntax>().Single().Usings;
+        var defaultMethod = GetDefaultMethodName(method);
         var ownerClass = method.Symbol.ContainingType;
         var comparer = new MethodSpecializationComparer(compilation);
         var specializedMethods = ownerClass
             .GetMembers()
             .Select(x => MethodSpecialization.MakeClosedSignature(x, method.Symbol))
             .OfType<MethodSpecialization>()
-            .OrderBy(x => x, comparer)
+            .OrderBy(static x => x, comparer)
             .ToArray();
 
-        static string getParamName(IParameterSymbol p)
-            => p.RefKind switch
-            {
-                RefKind.None => $"{p.Type}",
-                RefKind.Ref or
-                RefKind.Out or
-                RefKind.In => $"ref_{p.Type}",
-                _ => throw new InvalidOperationException(),
-            };
-
         var builder = GenerateSpecializedMethod(source, method, defaultMethod, specializedMethods);
-        var hintName = builder.GetPreferHintName(suffix: $".{method.Symbol.Name}-{string.Join("-", method.Symbol.Parameters.Select(getParamName))}+Specialized");
+        var hintName = builder.GetPreferHintName(suffix: "+Specialized");
+        var sourceCode = builder.Build();
         context.AddSource(
             hintName,
-            builder.Build());
+            sourceCode);
     }
 
+    private static string GetDefaultMethodName(MethodDeclarationInfo method)
+    {
+        static bool isTargetAttribute(AttributeData attr)
+            => attr.AttributeClass?.ToDisplayString() == AttributeFullName;
+
+        var attr = method.Symbol
+            .GetAttributes()
+            .Single(isTargetAttribute);
+        return attr.ConstructorArguments.FirstOrDefault().Value as string
+            ?? throw new Exception();
+    }
 
     private static bool IsAccessibilityModifier(SyntaxToken syntaxToken)
         => syntaxToken.Kind() switch
