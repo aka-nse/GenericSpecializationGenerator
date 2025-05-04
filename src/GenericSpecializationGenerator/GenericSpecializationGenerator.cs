@@ -1,8 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace GenericSpecializationGenerator;
+using PipelineParameter = (MethodDeclarationInfo method, GeneratorAttributeSyntaxContext context);
 
 [Generator(LanguageNames.CSharp)]
 public partial class GenericSpecializationGenerator : IIncrementalGenerator
@@ -11,28 +12,27 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
     {
         context.RegisterPostInitializationOutput(static context =>
         {
-            context.AddSource("GenericSpecializationGenerator.Attributes.cs", AttributesSourceCode);
+            context.AddSource(
+                "GenericSpecializationGenerator.Attributes.cs",
+                AttributesSourceCode);
         });
 
-        var primaryGenericMethod = context.SyntaxProvider.ForAttributeWithMetadataName(
-            $"{GenericSpecializationNamespaceName}.{PrimaryGenericAttributeName}",
-            static (node, token) => true,
-            static (context, token) =>
-            {
-                var methodSymbol = (IMethodSymbol)context.TargetSymbol;
-                var methodNode = (MethodDeclarationSyntax)context.TargetNode;
-                return new MethodDeclarationInfo(methodSymbol, methodNode);
-            })
-            .WithComparer(EqualityComparer<MethodDeclarationInfo>.Default)
-            .Combine(context.CompilationProvider);
+        var primaryGenericMethod = context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                AttributeFullName,
+                static (node, token) => true,
+                static (context, token) => (new MethodDeclarationInfo(context), context))
+            .WithComparer(PipelineComparer.Instance)
+            ;
         context.RegisterSourceOutput(primaryGenericMethod, Emit);
     }
 
     private static void Emit(
         SourceProductionContext context,
-        (MethodDeclarationInfo method, Compilation compilation) data)
+        PipelineParameter data)
     {
-        var (method, compilation) = data;
+        var (method, source) = data;
+        var compilation = source.SemanticModel.Compilation;
         if (!method.Symbol.IsPartialDefinition ||
             !method.Node.Modifiers.Any(IsAccessibilityModifier))
         {
@@ -43,38 +43,35 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
             return;
         }
 
-        var attr = method.Symbol
-            .GetAttributes()
-            .Single(attr => attr.AttributeClass?.ToDisplayString() == $"{GenericSpecializationNamespaceName}.{PrimaryGenericAttributeName}");
-        var defaultMethod = attr.ConstructorArguments.FirstOrDefault().Value as string ?? throw new Exception();
-        var usings = method.Node.Ancestors().OfType<CompilationUnitSyntax>().Single().Usings;
+        var defaultMethod = GetDefaultMethodName(method);
         var ownerClass = method.Symbol.ContainingType;
         var comparer = new MethodSpecializationComparer(compilation);
         var specializedMethods = ownerClass
             .GetMembers()
             .Select(x => MethodSpecialization.MakeClosedSignature(x, method.Symbol))
             .OfType<MethodSpecialization>()
-            .OrderBy(x => x, comparer)
+            .OrderBy(static x => x, comparer)
             .ToArray();
 
-        static string getParamName(IParameterSymbol p)
-        {
-            var name = $"{p.Type}";
-            name = name.Replace("<", "_").Replace(">", "_").Replace(",", "_");
-            return p.RefKind switch
-            {
-                RefKind.None => $"{name}",
-                RefKind.Ref or
-                RefKind.Out or
-                RefKind.In => $"ref_{name}",
-                _ => throw new InvalidOperationException(),
-            };
-        }
-
-        var hintName = $"{ownerClass.ToDisplayString()}.{method.Symbol.Name}-{string.Join("-", method.Symbol.Parameters.Select(getParamName))}+Specialized.g.cs";
+        var builder = GenerateSpecializedMethod(source, method, defaultMethod, specializedMethods);
+        var hintName = builder.GetPreferHintName(suffix: "+Specialized");
+        var sourceCode = builder.Build();
         context.AddSource(
             hintName,
-            GenerateSpecializedMethod(usings, ownerClass, method, defaultMethod, specializedMethods));
+            sourceCode);
+    }
+
+
+    private static string GetDefaultMethodName(MethodDeclarationInfo method)
+    {
+        static bool isTargetAttribute(AttributeData attr)
+            => attr.AttributeClass?.ToDisplayString() == AttributeFullName;
+
+        var attr = method.Symbol
+            .GetAttributes()
+            .Single(isTargetAttribute);
+        return attr.ConstructorArguments.FirstOrDefault().Value as string
+            ?? throw new InvalidOperationException();
     }
 
 
@@ -87,4 +84,18 @@ public partial class GenericSpecializationGenerator : IIncrementalGenerator
             SyntaxKind.PrivateKeyword => true,
             _ => false,
         };
+}
+
+
+file class PipelineComparer : IEqualityComparer<PipelineParameter>
+{
+    public static PipelineComparer Instance { get; } = new();
+
+    private PipelineComparer() { }
+
+    public bool Equals(PipelineParameter x, PipelineParameter y)
+        => MethodDeclarationInfo.Equals(x.method, y.method);
+
+    public int GetHashCode(PipelineParameter obj)
+        => obj.method.GetHashCode();
 }

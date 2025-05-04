@@ -1,39 +1,146 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using GenericSpecialization;
 
-namespace GenericSpecializationGenerator.DebugApp;
+namespace GenericSpecializationGenerator.DebugApp.SampleInner;
 
-internal partial class SampleInnerClass
+public partial class ContainerClass
 {
-    public partial class InnerBaseClass
+    public partial class Nested
     {
-        [PrimaryGeneric(nameof(Example1Default))]
-        private protected static partial void Example1<T>(T input) where T : unmanaged, INumber<T>;
+        [PrimaryGeneric(nameof(Add_default))]
+        public static partial T1 Add<T1, T2>(T1 x, T2 y);
+        public static T1 Add_default<T1, T2>(T1 x, T2 y)
+            => throw new NotSupportedException();
 
-        private static void Example1Default<T>(T input)
-        {
-            Console.WriteLine($"default");
-        }
+        private static int Add(int x, int y)
+            => x + y;
 
-        private static void Example1(int input)
-        {
-            Console.WriteLine($"int specialized");
-        }
+        private static double Add(double x, double y)
+            => x + y;
 
-        private static void Example1(double input)
-        {
-            Console.WriteLine($"double specialized");
-        }
+        private static double Add(double x, int y)
+            => x + y;
+
+        private static int Add(int x, double y)
+            => (int)(x + y);
     }
+}
 
-    public class InnerDerivedClass : InnerBaseClass
+public partial class ContainerClass<T3, T4, T5>
+{
+    public partial class Nested
     {
-        public static void Example1Derived<T>(T input) where T : unmanaged, INumber<T>
-            => Example1(input);
+        [PrimaryGeneric(nameof(Add_default))]
+        public static partial T1 Add<T1, T2>(T1 x, T2 y);
+        public static T1 Add_default<T1, T2>(T1 x, T2 y)
+            => throw new NotSupportedException();
+
+        private static int Add(int x, int y)
+            => x + y;
+
+        private static double Add(double x, double y)
+            => x + y;
+
+        private static double Add(double x, int y)
+            => x + y;
+
+        private static int Add(int x, double y)
+            => (int)(x + y);
+    }
+}
+
+public partial interface IContainerInterface
+{
+    public partial class Nested
+    {
+        [PrimaryGeneric(nameof(Add_default))]
+        public static partial T1 Add<T1, T2>(T1 x, T2 y);
+        public static T1 Add_default<T1, T2>(T1 x, T2 y)
+            => throw new NotSupportedException();
+
+        private static int Add(int x, int y)
+            => x + y;
+
+        private static double Add(double x, double y)
+            => x + y;
+
+        private static double Add(double x, int y)
+            => x + y;
+
+        private static int Add(int x, double y)
+            =>(int)(x + y);
+    }
+}
+
+public partial interface IContainerInterface<T3, T4, T5>
+{
+    public partial class Nested
+    {
+        [PrimaryGeneric(nameof(Add_default))]
+        public static partial T1 Add<T1, T2>(T1 x, T2 y);
+        public static T1 Add_default<T1, T2>(T1 x, T2 y)
+            => throw new NotSupportedException();
+
+        private static int Add(int x, int y)
+            => x + y;
+
+        private static double Add(double x, double y)
+            => x + y;
+
+        private static double Add(double x, int y)
+            => x + y;
+
+        private static int Add(int x, double y)
+            => (int)(x + y);
+    }
+}
+
+public partial struct ContainerStruct
+{
+    public partial class Nested
+    {
+        [PrimaryGeneric(nameof(Add_default))]
+        public static partial T1 Add<T1, T2>(T1 x, T2 y);
+        public static T1 Add_default<T1, T2>(T1 x, T2 y)
+            => throw new NotSupportedException();
+
+        private static int Add(int x, int y)
+            => x + y;
+
+        private static double Add(double x, double y)
+            => x + y;
+
+        private static double Add(double x, int y)
+            => x + y;
+
+        private static int Add(int x, double y)
+            => (int)(x + y);
+    }
+}
+
+public partial struct ContainerStruct<T3, T4, T5>
+{
+    public partial class Nested
+    {
+        [PrimaryGeneric(nameof(Add_default))]
+        public static partial T1 Add<T1, T2>(T1 x, T2 y);
+        public static T1 Add_default<T1, T2>(T1 x, T2 y)
+            => throw new NotSupportedException();
+
+        private static int Add(int x, int y)
+            => x + y;
+
+        private static double Add(double x, double y)
+            => x + y;
+
+        private static double Add(double x, int y)
+            => x + y;
+
+        private static int Add(int x, double y)
+            => (int)(x + y);
     }
 }
