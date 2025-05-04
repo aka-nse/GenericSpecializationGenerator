@@ -1,21 +1,30 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace GenericSpecializationGenerator;
 
-internal class MethodDeclarationInfo(IMethodSymbol symbol, MethodDeclarationSyntax node) : IEquatable<MethodDeclarationInfo>
+internal class MethodDeclarationInfo : IEquatable<MethodDeclarationInfo>
 {
-    public IMethodSymbol Symbol { get; } = symbol;
-    public MethodDeclarationSyntax Node { get; } = node;
+    private readonly string _symbolIdentifier;
+    public IMethodSymbol Symbol { get; }
+    public MethodDeclarationSyntax Node { get; }
+
+    public MethodDeclarationInfo(GeneratorAttributeSyntaxContext context)
+    {
+        Symbol = (IMethodSymbol)context.TargetSymbol;
+        Node = (MethodDeclarationSyntax)context.TargetNode;
+        _symbolIdentifier = Symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+    }
 
     public override string ToString()
     {
-        /*
-        foreach(var typeArg in Symbol.TypeArguments.OfType<ITypeParameterSymbol>())
-        {
-        }
-        */
-        return $"{string.Join(" ", Node.Modifiers)} {Node.ReturnType} {Symbol.Name}{Node.TypeParameterList}{Node.ParameterList} {Node.ConstraintClauses}";
+        var modifiers = string.Join(" ", Node.Modifiers);
+        var returnType = Node.ReturnType;
+        var name = Symbol.Name;
+        var typeParams = Node.TypeParameterList;
+        var @params = Node.ParameterList;
+        var constraints = Node.ConstraintClauses;
+        return $"{modifiers} {returnType} {name}{typeParams}{@params} {constraints}";
     }
 
     public override int GetHashCode()
@@ -28,7 +37,7 @@ internal class MethodDeclarationInfo(IMethodSymbol symbol, MethodDeclarationSynt
         => Equals(this, other);
 
     public static bool Equals(MethodDeclarationInfo x, MethodDeclarationInfo y)
-        => SymbolEqualityComparer.Default.Equals(x.Symbol, y.Symbol);
+        => x._symbolIdentifier == y._symbolIdentifier;
 
     public static bool operator ==(MethodDeclarationInfo x, MethodDeclarationInfo y) => Equals(x, y);
     public static bool operator !=(MethodDeclarationInfo x, MethodDeclarationInfo y) => !Equals(x, y);

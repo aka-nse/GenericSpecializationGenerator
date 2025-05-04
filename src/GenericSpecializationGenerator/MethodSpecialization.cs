@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 namespace GenericSpecializationGenerator;
 
@@ -92,7 +92,8 @@ internal class MethodSpecialization(
 }
 
 
-internal class MethodSpecializationComparer(Compilation compilation) : IComparer<MethodSpecialization>
+internal class MethodSpecializationComparer(Compilation compilation)
+    : IComparer<MethodSpecialization>
 {
     public int Compare(MethodSpecialization x, MethodSpecialization y)
     {
