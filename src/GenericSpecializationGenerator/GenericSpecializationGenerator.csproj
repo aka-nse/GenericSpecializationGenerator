@@ -31,22 +31,27 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-        <None Include="..\..\LICENSE.txt">
+        <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="../../LICENSE.txt">
             <Pack>True</Pack>
-            <PackagePath>\</PackagePath>
+            <PackagePath>/</PackagePath>
         </None>
-        <None Include="..\..\README.md">
+        <None Include="../../README.md">
             <Pack>True</Pack>
-            <PackagePath>\</PackagePath>
+            <PackagePath>/</PackagePath>
         </None>
     </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\..\submodules\SourceGeneratorToolkit\src\SourceGeneratorToolkit\SourceGeneratorToolkit.csproj">
+    <!-- SourceGeneratorToolkit -->
+    <ItemGroup Condition="'$(Configuration)'=='Release'">
+        <ProjectReference Include="../../submodules/SourceGeneratorToolkit/src/SourceGeneratorToolkit/SourceGeneratorToolkit.csproj">
             <OutputItemType>Analyzer</OutputItemType>
             <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
         </ProjectReference>
     </ItemGroup>
+    <ItemGroup Condition="'$(Configuration)'=='Debug'">
+        <Compile Include="../../submodules/SourceGeneratorToolkit/src/SourceGeneratorToolkit/resoruces/**/*.cs" LinkBase="resources" />
+    </ItemGroup>
+    <!-- SourceGeneratorToolkit -->
 
 </Project>

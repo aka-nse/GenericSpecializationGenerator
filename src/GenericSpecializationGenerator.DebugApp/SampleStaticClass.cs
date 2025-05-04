@@ -1,4 +1,4 @@
-﻿// #define TEST_STATIC_1
+// #define TEST_STATIC_1
 // #define TEST_STATIC_2
 // #define TEST_STATIC_3
 // #define TEST_STATIC_4
