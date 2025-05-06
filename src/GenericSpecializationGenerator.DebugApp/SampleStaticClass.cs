@@ -1,9 +1,9 @@
-﻿// #define TEST_STATIC_1
-// #define TEST_STATIC_2
-// #define TEST_STATIC_3
-// #define TEST_STATIC_4
-// #define TEST_STATIC_5
-// #define TEST_STATIC_6
+#define TEST_STATIC_1
+#define TEST_STATIC_2
+#define TEST_STATIC_3
+#define TEST_STATIC_4
+#define TEST_STATIC_5
+#define TEST_STATIC_6
 
 using System;
 using System.Collections.Generic;
