@@ -1,6 +1,6 @@
-// #define TEST_INSTANCE_FOO
-// #define TEST_INSTANCE_BAR
-// #define TEST_INSTANCE_BAZ
+#define TEST_INSTANCE_FOO
+#define TEST_INSTANCE_BAR
+#define TEST_INSTANCE_BAZ
 
 using System;
 using System.Collections.Generic;
