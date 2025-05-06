@@ -1,12 +1,17 @@
+#define TEST_INNER
+
+#if true
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+#endif
 using GenericSpecialization;
 
 namespace GenericSpecializationGenerator.DebugApp.SampleInner;
 
+#if TEST_INNER
 public partial class ContainerClass
 {
     public partial class Nested
@@ -144,3 +149,4 @@ public partial struct ContainerStruct<T3, T4, T5>
             => (int)(x + y);
     }
 }
+#endif
