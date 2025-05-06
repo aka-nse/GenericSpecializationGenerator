@@ -164,3 +164,7 @@ Apache License Version 2.0
 
 - Supports struct/interface
 - Supports inner type
+
+### v0.1.5
+
+- Uses managed source builder
