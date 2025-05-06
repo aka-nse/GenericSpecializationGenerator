@@ -15,7 +15,7 @@
 
         <PackageId>akanse.$(AssemblyName)</PackageId>
         <Title>GenericSpecializationGenerator</Title>
-        <Version>0.1.4.0</Version>
+        <Version>0.1.5.0</Version>
         <Authors>aka-nse</Authors>
         <Company />
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
