@@ -168,3 +168,7 @@ Apache License Version 2.0
 ### v0.1.5
 
 - Uses managed source builder
+
+### v0.1.5.1
+
+- Updates references
