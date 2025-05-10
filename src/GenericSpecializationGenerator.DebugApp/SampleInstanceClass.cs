@@ -1,13 +1,15 @@
-#define TEST_INSTANCE_FOO
-#define TEST_INSTANCE_BAR
-#define TEST_INSTANCE_BAZ
+// #define TEST_INSTANCE_FOO
+// #define TEST_INSTANCE_BAR
+// #define TEST_INSTANCE_BAZ
 
+#if true
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GenericSpecialization;
+#endif
 
 namespace GenericSpecializationGenerator.DebugApp;
 
